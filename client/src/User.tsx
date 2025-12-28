@@ -1,0 +1,135 @@
+import { useEffect, useState } from "react";
+import { UsersAPI } from "./Api.tsx";
+
+//src/Users.tsx
+
+interface User {
+  id: number;
+  username: string;
+  mobile: string;
+  email: string;
+}
+
+export default function Users() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [form, setForm] = useState({ username: "", mobile: "", email: "" });
+
+  const load = async () => {
+    const { data } = await UsersAPI.list();
+    setUsers(data);
+  };
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const { data } = await UsersAPI.list();
+      setUsers(data);
+    };
+    void fetchUsers();
+  }, []);
+  const create = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await UsersAPI.create(form);
+    setForm({ username: "", mobile: "", email: "" });
+    load();
+  };
+
+  const remove = async (id: number) => {
+    await UsersAPI.delete(id);
+    load();
+  };
+
+  const update = async (id: number, user: User) => {
+    await UsersAPI.update(id, user);
+    load();
+  };
+
+  return (
+    <div>
+      <h2>Users</h2>
+      <form onSubmit={create}>
+        <input
+          placeholder="UserName"
+          value={form.username}
+          onChange={(e) => setForm({ ...form, username: e.target.value })}
+        />
+        <input
+          placeholder="Mobile"
+          value={form.mobile}
+          onChange={(e) => setForm({ ...form, mobile: e.target.value })}
+        />
+        <input
+          placeholder="Email"
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+        />
+        <button type="submit">Create</button>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>UserName</th>
+            <th>Mobile</th>
+            <th>Email</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((u) => (
+            <tr key={u.id}>
+              <td>
+                <input
+                  aria-label="Username"
+                  value={u.username}
+                  onChange={(e) =>
+                    setUsers(
+                      users.map((user) =>
+                        user.id === u.id
+                          ? { ...user, username: e.target.value }
+                          : user
+                      )
+                    )
+                  }
+                />
+              </td>
+              <td>
+                <input
+                  aria-label="Mobile"
+                  value={u.mobile}
+                  onChange={(e) =>
+                    setUsers(
+                      users.map((user) =>
+                        user.id === u.id
+                          ? { ...user, mobile: e.target.value }
+                          : user
+                      )
+                    )
+                  }
+                />
+              </td>
+              <td>
+                <input
+                  aria-label="Email"
+                  placeholder="Email"
+                  value={u.email || ""}
+                  onChange={(e) =>
+                    setUsers(
+                      users.map((user) =>
+                        user.id === u.id
+                          ? { ...user, email: e.target.value }
+                          : user
+                      )
+                    )
+                  }
+                />
+              </td>
+              <td>
+                <button onClick={() => update(u.id, u)}>Save</button>
+                <button onClick={() => remove(u.id)}>Delete</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
